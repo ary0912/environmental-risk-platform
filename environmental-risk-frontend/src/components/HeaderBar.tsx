@@ -1,11 +1,11 @@
-import axios from "axios";
 import { useEffect, useState } from "react";
+import { getSystemHealth } from "../services/api";
 
 function HeaderBar() {
   const [status, setStatus] = useState("Checking...");
 
   useEffect(() => {
-    axios.get("http://127.0.0.1:8000/system-health")
+    getSystemHealth()
       .then(() => setStatus("Operational"))
       .catch(() => setStatus("Offline"));
   }, []);

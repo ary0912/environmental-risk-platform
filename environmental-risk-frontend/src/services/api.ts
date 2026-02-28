@@ -1,7 +1,14 @@
 import axios from "axios";
 
+// 🔥 Production-safe API base URL
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
+if (!API_BASE_URL) {
+  throw new Error("VITE_API_URL is not defined in environment variables");
+}
+
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000",
+  baseURL: API_BASE_URL,
 });
 
 // 🔹 System health
@@ -22,7 +29,7 @@ export const predictRisk = (data: {
 }) =>
   API.post("/predict-risk", data);
 
-// 🔹 Explain risk  ✅ FIXED
+// 🔹 Explain risk
 export const explainRisk = (data: {
   temperature: number;
   humidity: number;
@@ -38,7 +45,8 @@ export const runSimulation = (data: {
   wind_factor: number;
   steps: number;
 }) =>
-  API.post("/simulate", data);
+  API.post("/simulate-risk", data);  // ✅ FIXED endpoint
 
+// 🔹 Scenario
 export const predictScenario = (scenario: string) =>
   API.post("/predict-scenario", { scenario });
