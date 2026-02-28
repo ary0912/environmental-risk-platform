@@ -13,3 +13,4 @@ geopandas
 shap
 xgboost
 joblib
+geoalchemy2
