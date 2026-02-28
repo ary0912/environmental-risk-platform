@@ -1,10 +1,23 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+import logging
 
 from app.api.routes import router
 from app.database import engine
 from app.models.prediction_log import PredictionLog
 
+
+# ----------------------------------
+# Configure Logging
+# ----------------------------------
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+# ----------------------------------
+# Create FastAPI App
+# ----------------------------------
 
 app = FastAPI(
     title="Environmental Risk Modelling API",
@@ -12,7 +25,11 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# 🔹 CORS Configuration
+
+# ----------------------------------
+# CORS Configuration
+# ----------------------------------
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -25,27 +42,33 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 🔹 Create tables safely at startup
+
+# ----------------------------------
+# Startup Event (Safe DB Init)
+# ----------------------------------
+
 @app.on_event("startup")
-def startup_event():
+async def startup_event():
     try:
         PredictionLog.metadata.create_all(bind=engine)
-        print("Database tables verified.")
+        logger.info("Database tables verified successfully.")
     except Exception as e:
-        print(f"Database initialization failed: {e}")
+        logger.error(f"Database initialization failed: {e}")
 
-# 🔹 Register API routes
+
+# ----------------------------------
+# Register Routes
+# ----------------------------------
+
 app.include_router(router)
 
-# 🔹 Root health check
+
+# ----------------------------------
+# Root Health Check
+# ----------------------------------
+
 @app.get("/")
 def root():
-    return {"status": "API running successfully"}
-
-# 🔹 System health endpoint
-@app.get("/system-health")
-def system_health():
     return {
-        "status": "healthy",
-        "database": "connected"
+        "status": "API running successfully 🚀"
     }

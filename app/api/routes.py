@@ -6,7 +6,19 @@ from app.models.risk_model import RiskModel
 from app.models.simulation import simulate_propagation
 
 router = APIRouter()
-model = RiskModel()
+
+# ----------------------------------
+# Lazy Model Initialization
+# ----------------------------------
+
+_model_instance = None
+
+def get_model():
+    global _model_instance
+    if _model_instance is None:
+        _model_instance = RiskModel()
+    return _model_instance
+
 
 # -----------------------------
 # Request Models
@@ -18,12 +30,6 @@ class RiskRequest(BaseModel):
     wind_speed: float
     latitude: float
     longitude: float
-
-
-class ExplainRequest(BaseModel):
-    temperature: float
-    humidity: float
-    wind_speed: float
 
 
 class ScenarioRequest(BaseModel):
@@ -45,7 +51,7 @@ def system_health():
     return {
         "api": "operational",
         "database": "connected",
-        "model": "loaded"
+        "model": "ready"
     }
 
 
@@ -55,6 +61,8 @@ def system_health():
 
 @router.post("/predict-risk")
 def predict_risk(data: RiskRequest):
+
+    model = get_model()
 
     probability = model.predict(
         temperature=data.temperature,
@@ -103,13 +111,15 @@ def predict_risk(data: RiskRequest):
 @router.post("/explain-risk")
 def explain_risk(data: RiskRequest):
 
+    model = get_model()
+
     explanation = model.explain(
         temperature=data.temperature,
         humidity=data.humidity,
         wind_speed=data.wind_speed
     )
 
-    # 🔥 Ensure everything is JSON safe
+    # Ensure JSON safe output
     cleaned = [
         {
             "feature": str(item["feature"]),
@@ -129,6 +139,7 @@ def explain_risk(data: RiskRequest):
 
 @router.get("/risk-heatmap")
 def risk_heatmap():
+
     db = SessionLocal()
 
     result = db.execute(text("""
@@ -157,6 +168,8 @@ def risk_heatmap():
 @router.post("/predict-scenario")
 def predict_scenario(data: ScenarioRequest):
 
+    model = get_model()
+
     presets = {
         "baseline": {"temperature": 25, "humidity": 50, "wind_speed": 10},
         "heatwave": {"temperature": 40, "humidity": 30, "wind_speed": 15},
@@ -165,7 +178,6 @@ def predict_scenario(data: ScenarioRequest):
     }
 
     config = presets.get(data.scenario, presets["baseline"])
-
     probability = model.predict(**config)
 
     return {
