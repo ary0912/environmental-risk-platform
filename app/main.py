@@ -18,15 +18,21 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:5173",
         "http://127.0.0.1:5173",
-        "https://environmental-risk-platform.vercel.app/"
+        "https://environmental-risk-platform.vercel.app"
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# 🔹 Create tables on startup
-PredictionLog.metadata.create_all(bind=engine)
+# 🔹 Create tables safely at startup
+@app.on_event("startup")
+def startup_event():
+    try:
+        PredictionLog.metadata.create_all(bind=engine)
+        print("Database tables verified.")
+    except Exception as e:
+        print(f"Database initialization failed: {e}")
 
 # 🔹 Register API routes
 app.include_router(router)
@@ -36,7 +42,7 @@ app.include_router(router)
 def root():
     return {"status": "API running successfully"}
 
-# 🔹 System health endpoint (frontend expects this)
+# 🔹 System health endpoint
 @app.get("/system-health")
 def system_health():
     return {
