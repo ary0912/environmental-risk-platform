@@ -75,14 +75,20 @@ def predict_risk(data: RiskRequest):
     db.execute(
         text("""
             INSERT INTO predictions (
-                temperature, humidity, wind_speed,
-                risk_probability, latitude, longitude,
-                location
+                temperature,
+                humidity,
+                wind_speed,
+                risk_probability,
+                latitude,
+                longitude
             )
             VALUES (
-                :temperature, :humidity, :wind_speed,
-                :risk_probability, :latitude, :longitude,
-                ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)
+                :temperature,
+                :humidity,
+                :wind_speed,
+                :risk_probability,
+                :latitude,
+                :longitude
             )
         """),
         {
@@ -119,7 +125,6 @@ def explain_risk(data: RiskRequest):
         wind_speed=data.wind_speed
     )
 
-    # Ensure JSON safe output
     cleaned = [
         {
             "feature": str(item["feature"]),
@@ -143,14 +148,15 @@ def risk_heatmap():
     db = SessionLocal()
 
     result = db.execute(text("""
-        SELECT id,
-               temperature,
-               humidity,
-               wind_speed,
-               risk_probability,
-               created_at,
-               ST_Y(location::geometry) as latitude,
-               ST_X(location::geometry) as longitude
+        SELECT
+            id,
+            temperature,
+            humidity,
+            wind_speed,
+            risk_probability,
+            latitude,
+            longitude,
+            created_at
         FROM predictions
         ORDER BY created_at ASC
     """))

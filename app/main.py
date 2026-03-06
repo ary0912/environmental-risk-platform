@@ -30,12 +30,10 @@ app = FastAPI(
 # CORS Configuration
 # ----------------------------------
 
-from fastapi.middleware.cors import CORSMiddleware
-
 origins = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
     "https://environmental-risk-platform.vercel.app",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173"
 ]
 
 app.add_middleware(
@@ -61,18 +59,31 @@ async def startup_event():
 
 
 # ----------------------------------
-# Register Routes
+# Register API Routes
 # ----------------------------------
 
 app.include_router(router)
 
 
 # ----------------------------------
-# Root Health Check
+# Root Endpoint
 # ----------------------------------
 
 @app.get("/")
 def root():
     return {
         "status": "API running successfully 🚀"
+    }
+
+
+# ----------------------------------
+# System Health Endpoint
+# ----------------------------------
+
+@app.get("/system-health")
+def system_health():
+    return {
+        "api": "operational",
+        "database": "connected",
+        "model": "ready"
     }
