@@ -1,12 +1,11 @@
 import axios from "axios";
 
-// 🔥 Production-safe API base URL
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+// Backend URL
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL ||
+  "https://environmental-risk-platform-3.onrender.com";
 
-if (!API_BASE_URL) {
-  throw new Error("VITE_API_URL is not defined in environment variables");
-}
-
+// Axios instance
 const API = axios.create({
   baseURL: API_BASE_URL,
 });
@@ -45,7 +44,7 @@ export const runSimulation = (data: {
   wind_factor: number;
   steps: number;
 }) =>
-  API.post("/simulate-risk", data);  // ✅ FIXED endpoint
+  API.post("/simulate-risk", data);
 
 // 🔹 Scenario
 export const predictScenario = (scenario: string) =>
