@@ -7,6 +7,8 @@ import RiskOutput from "./components/RiskOutput";
 import ScenarioPanel from "./components/ScenarioPanel";
 import MapClickHandler from "./components/MapClickHandler";
 import RiskTrendChart from "./components/RiskTrendChart";
+import WelcomeModal from "./components/WelcomeModal";
+import AuditTrail from "./components/AuditTrail";
 import { getHeatmap } from "./services/api";
 import "leaflet/dist/leaflet.css";
 import "./index.css";
@@ -47,8 +49,21 @@ function App() {
     setPoints(res.data.results);
   };
 
+  const [showWelcome, setShowWelcome] = useState(true);
+
+  useEffect(() => {
+    const hasVisited = localStorage.getItem("vulcan_onboarded");
+    if (hasVisited) setShowWelcome(false);
+  }, []);
+
+  const handleCloseWelcome = () => {
+    setShowWelcome(false);
+    localStorage.setItem("vulcan_onboarded", "true");
+  };
+
   return (
     <div>
+      <WelcomeModal isOpen={showWelcome} onClose={handleCloseWelcome} />
       <HeaderBar />
 
       <div className="layout">
@@ -64,20 +79,20 @@ function App() {
           />
 
           <ScenarioPanel />
+          <AuditTrail />
         </div>
 
         {/* MAIN DASHBOARD */}
         <div className="right-column">
-
           <div className="map-container">
             <MapContainer
               center={[51.4545, -2.5879]}
               zoom={10}
-              style={{ height: "450px", width: "100%" }}
+              style={{ height: "100%", width: "100%", background: '#09090b' }}
             >
               <TileLayer
-                attribution="&copy; OpenStreetMap contributors"
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
               />
 
               <HeatmapLayer points={points} />

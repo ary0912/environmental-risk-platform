@@ -3,7 +3,7 @@ import axios from "axios";
 // Backend URL
 const API_BASE_URL =
   import.meta.env.VITE_API_URL ||
-  "https://environmental-risk-platform-3.onrender.com";
+  "http://localhost:8000";
 
 // Axios instance
 const API = axios.create({

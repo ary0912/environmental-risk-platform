@@ -1,22 +1,11 @@
 import os
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
+from unittest.mock import MagicMock
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+# ----------------------------------
+# Neutralized Database Layer
+# No database dependency for easy testing
+# ----------------------------------
 
-if not DATABASE_URL:
-    raise ValueError("DATABASE_URL environment variable is not set")
-
-engine = create_engine(
-    DATABASE_URL,
-    pool_pre_ping=True
-)
-
-SessionLocal = sessionmaker(
-    autocommit=False,
-    autoflush=False,
-    bind=engine
-)
-
-# ✅ REQUIRED for models
-Base = declarative_base()
+engine = MagicMock()
+SessionLocal = MagicMock()
+Base = MagicMock()

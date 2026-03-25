@@ -1,8 +1,5 @@
 import { useState } from "react";
-import {
-  predictRisk,
-  explainRisk,
-} from "../services/api";
+import { predictRisk, explainRisk } from "../services/api";
 
 interface Driver {
   feature: string;
@@ -24,17 +21,12 @@ function ControlPanel({
   setLoading,
   selectedLocation,
 }: Props) {
-
   const [temperature, setTemperature] = useState<number>(30);
   const [humidity, setHumidity] = useState<number>(40);
   const [windSpeed, setWindSpeed] = useState<number>(15);
 
   const runModel = async () => {
-
-    if (!selectedLocation) {
-      alert("Please select a location on the map first.");
-      return;
-    }
+    if (!selectedLocation) return;
 
     try {
       setLoading(true);
@@ -42,7 +34,6 @@ function ControlPanel({
       setDrivers([]);
 
       const { lat, lng } = selectedLocation;
-
       const prediction = await predictRisk({
         temperature,
         humidity,
@@ -51,10 +42,7 @@ function ControlPanel({
         longitude: lng,
       });
 
-      const probability =
-        prediction.data.risk_probability;
-
-      setProbability(probability);
+      setProbability(prediction.data.risk_probability);
 
       const explanation = await explainRisk({
         temperature,
@@ -64,12 +52,8 @@ function ControlPanel({
         longitude: lng,
       });
 
-      setDrivers(
-        explanation.data.feature_contributions || []
-      );
-
+      setDrivers(explanation.data.feature_contributions || []);
       onNewPrediction();
-
     } catch (error) {
       console.error("Model execution failed:", error);
     } finally {
@@ -78,66 +62,78 @@ function ControlPanel({
   };
 
   return (
-    <div className="panel">
-      <h3>Environmental Input Parameters</h3>
+    <div className="panel" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div>
+        <h3 style={{ fontSize: '14px', marginBottom: '4px' }}>Model Inputs</h3>
+        <p className="text-muted">Adjust environmental variables for simulation.</p>
+      </div>
 
-      {selectedLocation && (
-        <div
-          style={{
-            marginBottom: "16px",
-            padding: "10px",
-            background: "#f3f4f6",
-            borderRadius: "6px",
-            fontSize: "13px",
-          }}
-        >
-          <strong>Selected Location:</strong>
-          <div>Lat: {selectedLocation.lat.toFixed(4)}</div>
-          <div>Lng: {selectedLocation.lng.toFixed(4)}</div>
-        </div>
-      )}
+      <div style={{
+        padding: '12px',
+        background: 'var(--bg-main)',
+        borderRadius: 'var(--radius)',
+        border: '1px solid var(--border)',
+        opacity: selectedLocation ? 1 : 0.5,
+        transition: 'opacity 0.2s ease'
+      }}>
+        <span className="label">Geospatial Target</span>
+        {selectedLocation ? (
+          <div style={{ fontSize: '13px', fontFamily: 'var(--font-mono)', color: 'var(--primary)' }}>
+            {selectedLocation.lat.toFixed(6)}, {selectedLocation.lng.toFixed(6)}
+          </div>
+        ) : (
+          <div style={{ fontSize: '12px', color: '#ef4444' }}>Select location on map...</div>
+        )}
+      </div>
 
-      <label>
-        Temperature: <strong>{temperature}°C</strong>
-      </label>
-      <input
-        type="range"
-        min="0"
-        max="50"
-        value={temperature}
-        onChange={(e) =>
-          setTemperature(Number(e.target.value))
-        }
-      />
+      <div className="input-group">
+        <label className="label" style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <span>Temperature</span>
+          <span style={{ color: 'var(--text-main)' }}>{temperature}°C</span>
+        </label>
+        <input
+          type="range"
+          min="0"
+          max="50"
+          value={temperature}
+          onChange={(e) => setTemperature(Number(e.target.value))}
+        />
+      </div>
 
-      <label>
-        Humidity: <strong>{humidity}%</strong>
-      </label>
-      <input
-        type="range"
-        min="0"
-        max="100"
-        value={humidity}
-        onChange={(e) =>
-          setHumidity(Number(e.target.value))
-        }
-      />
+      <div className="input-group">
+        <label className="label" style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <span>Relative Humidity</span>
+          <span style={{ color: 'var(--text-main)' }}>{humidity}%</span>
+        </label>
+        <input
+          type="range"
+          min="0"
+          max="100"
+          value={humidity}
+          onChange={(e) => setHumidity(Number(e.target.value))}
+        />
+      </div>
 
-      <label>
-        Wind Speed: <strong>{windSpeed} km/h</strong>
-      </label>
-      <input
-        type="range"
-        min="0"
-        max="50"
-        value={windSpeed}
-        onChange={(e) =>
-          setWindSpeed(Number(e.target.value))
-        }
-      />
+      <div className="input-group">
+        <label className="label" style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <span>Surface Wind</span>
+          <span style={{ color: 'var(--text-main)' }}>{windSpeed} km/h</span>
+        </label>
+        <input
+          type="range"
+          min="0"
+          max="100"
+          value={windSpeed}
+          onChange={(e) => setWindSpeed(Number(e.target.value))}
+        />
+      </div>
 
-      <button onClick={runModel}>
-        Run Risk Model
+      <button
+        onClick={runModel}
+        disabled={!selectedLocation}
+        style={{ width: '100%', marginTop: '8px' }}
+      >
+        EXECUTE SIMULATION
       </button>
     </div>
   );

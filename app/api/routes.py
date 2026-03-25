@@ -1,15 +1,19 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
-from sqlalchemy import text
-from app.database import SessionLocal
+# from app.database import SessionLocal
 from app.models.risk_model import RiskModel
 from app.models.simulation import simulate_propagation
 
+from datetime import datetime
+import uuid
+
 router = APIRouter()
 
-# ----------------------------------
-# Lazy Model Initialization
-# ----------------------------------
+# -----------------------------
+# In-Memory Storage (Zero Setup)
+# -----------------------------
+
+PREDICTIONS = []
 
 _model_instance = None
 
@@ -70,39 +74,18 @@ def predict_risk(data: RiskRequest):
         wind_speed=data.wind_speed
     )
 
-    db = SessionLocal()
-
-    db.execute(
-        text("""
-            INSERT INTO predictions (
-                temperature,
-                humidity,
-                wind_speed,
-                risk_probability,
-                latitude,
-                longitude
-            )
-            VALUES (
-                :temperature,
-                :humidity,
-                :wind_speed,
-                :risk_probability,
-                :latitude,
-                :longitude
-            )
-        """),
-        {
-            "temperature": data.temperature,
-            "humidity": data.humidity,
-            "wind_speed": data.wind_speed,
-            "risk_probability": probability,
-            "latitude": data.latitude,
-            "longitude": data.longitude,
-        }
-    )
-
-    db.commit()
-    db.close()
+    prediction = {
+        "id": str(uuid.uuid4()),
+        "temperature": data.temperature,
+        "humidity": data.humidity,
+        "wind_speed": data.wind_speed,
+        "risk_probability": probability,
+        "latitude": data.latitude,
+        "longitude": data.longitude,
+        "created_at": datetime.now().isoformat()
+    }
+    
+    PREDICTIONS.append(prediction)
 
     return {
         "risk_probability": probability,
@@ -145,26 +128,7 @@ def explain_risk(data: RiskRequest):
 @router.get("/risk-heatmap")
 def risk_heatmap():
 
-    db = SessionLocal()
-
-    result = db.execute(text("""
-        SELECT
-            id,
-            temperature,
-            humidity,
-            wind_speed,
-            risk_probability,
-            latitude,
-            longitude,
-            created_at
-        FROM predictions
-        ORDER BY created_at ASC
-    """))
-
-    rows = result.fetchall()
-    db.close()
-
-    return {"results": [dict(row._mapping) for row in rows]}
+    return {"results": list(reversed(PREDICTIONS))[:50]}
 
 
 # -----------------------------

@@ -10,25 +10,18 @@ function ScenarioPanel() {
   const [results, setResults] = useState<ScenarioResult[]>([]);
   const [loadingScenario, setLoadingScenario] = useState<string | null>(null);
 
-  const scenarios = [
-    "baseline",
-    "heatwave",
-    "high_wind",
-    "decarbonised",
-  ];
+  const scenarios = ["baseline", "heatwave", "high_wind", "decarbonised"];
 
   const getRiskLevel = (prob: number) => {
-    if (prob > 0.7) return { label: "HIGH", color: "#cf1322" };
-    if (prob > 0.4) return { label: "MEDIUM", color: "#fa8c16" };
-    return { label: "LOW", color: "#389e0d" };
+    if (prob > 0.7) return { label: "CRITICAL", color: "#ef4444" };
+    if (prob > 0.4) return { label: "ELEVATED", color: "#f59e0b" };
+    return { label: "STABLE", color: "#10b981" };
   };
 
   const runScenario = async (scenario: string) => {
     try {
       setLoadingScenario(scenario);
-
       const res = await predictScenario(scenario);
-
       setResults((prev) => [
         ...prev.filter((r) => r.scenario !== scenario),
         res.data,
@@ -41,56 +34,44 @@ function ScenarioPanel() {
   };
 
   return (
-    <div className="panel">
-      <h3>Scenario Comparison</h3>
+    <div className="panel" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div>
+        <h3 style={{ fontSize: '14px', marginBottom: '4px' }}>Scenario Simulation</h3>
+        <p className="text-muted">Test risk propagation under preset environmental conditions.</p>
+      </div>
 
-      <p
-        style={{
-          fontSize: "13px",
-          color: "#6b7280",
-          marginBottom: "16px",
-        }}
-      >
-        Evaluate wildfire propagation risk under predefined
-        environmental scenarios.
-      </p>
-
-      {/* Scenario Buttons */}
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
         {scenarios.map((scenario) => (
           <button
             key={scenario}
             onClick={() => runScenario(scenario)}
             disabled={loadingScenario === scenario}
             style={{
-              background: "#1e3a8a",
-              opacity:
-                loadingScenario === scenario ? 0.6 : 1,
+              flex: '1 1 calc(50% - 4px)',
+              fontSize: '11px',
+              padding: '8px',
+              background: loadingScenario === scenario ? 'var(--bg-main)' : 'var(--bg-main)',
+              border: `1px solid ${loadingScenario === scenario ? 'var(--primary)' : 'var(--border)'}`,
+              color: loadingScenario === scenario ? 'var(--primary)' : 'var(--text-main)',
+              transition: 'all 0.2s ease'
             }}
           >
-            {loadingScenario === scenario
-              ? "Running..."
-              : scenario.replace("_", " ").toUpperCase()}
+            {loadingScenario === scenario ? "PROCESSING..." : scenario.replace("_", " ").toUpperCase()}
           </button>
         ))}
       </div>
 
-      {/* Scenario Results */}
       {results.length > 0 && (
-        <div
-          style={{
-            marginTop: "20px",
-            padding: "14px",
-            background: "#f9fafb",
-            borderRadius: "8px",
-            border: "1px solid #e5e7eb",
-          }}
-        >
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px',
+          marginTop: '8px',
+          paddingTop: '16px',
+          borderTop: '1px solid var(--border)'
+        }}>
           {results.map((result) => {
-            const risk = getRiskLevel(
-              result.risk_probability
-            );
-
+            const risk = getRiskLevel(result.risk_probability);
             return (
               <div
                 key={result.scenario}
@@ -98,35 +79,21 @@ function ScenarioPanel() {
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center",
-                  marginBottom: "10px",
+                  padding: '8px 12px',
+                  background: 'var(--bg-main)',
+                  borderRadius: '4px',
+                  borderLeft: `3px solid ${risk.color}`
                 }}
               >
                 <div>
-                  <strong>
-                    {result.scenario
-                      .replace("_", " ")
-                      .toUpperCase()}
-                  </strong>
-                  <div
-                    style={{
-                      fontSize: "13px",
-                      color: "#6b7280",
-                    }}
-                  >
-                    {(result.risk_probability * 100).toFixed(2)}%
+                  <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-main)' }}>
+                    {result.scenario.replace("_", " ").toUpperCase()}
+                  </div>
+                  <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                    PROB: {(result.risk_probability * 100).toFixed(1)}%
                   </div>
                 </div>
-
-                <span
-                  style={{
-                    background: risk.color,
-                    color: "#fff",
-                    padding: "4px 10px",
-                    borderRadius: "6px",
-                    fontSize: "12px",
-                    fontWeight: "bold",
-                  }}
-                >
+                <span style={{ fontSize: '10px', fontWeight: 800, color: risk.color }}>
                   {risk.label}
                 </span>
               </div>
